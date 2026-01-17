@@ -2,114 +2,142 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>แบบทดสอบ Arduino บทที่ 3</title>
+<title>Arduino Quiz บทที่ 4</title>
+
 <style>
 body{
-  font-family: Arial, sans-serif;
-  background:#f4f6f9;
-  margin:0;padding:20px;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg,#43cea2,#185a9d);
+  padding:30px;
 }
 .container{
-  max-width:900px;
+  max-width:800px;
   margin:auto;
   background:#fff;
   padding:30px;
-  border-radius:10px;
+  border-radius:16px;
+  box-shadow:0 15px 35px rgba(0,0,0,.25);
 }
 h1{text-align:center}
-.question{margin-bottom:25px}
-.answers label{
-  display:block;
-  margin:6px 0;
+.score{text-align:right;font-weight:bold}
+.question{font-size:20px;margin:20px 0}
+.choice{
+  border:2px solid #ddd;
+  border-radius:12px;
+  padding:12px;
+  margin:10px 0;
   cursor:pointer;
+  transition:.3s;
 }
-.correct{color:green;font-weight:bold}
-.wrong{color:red;font-weight:bold}
-.score-box{
-  background:#eef3ff;
-  padding:10px;
-  border-radius:6px;
-  margin-bottom:20px;
+.choice:hover{background:#f3f3f3}
+.correct{background:#d4edda;border-color:#28a745}
+.wrong{background:#f8d7da;border-color:#dc3545}
+.disabled{pointer-events:none}
+button{
+  width:100%;
+  padding:12px;
   font-size:18px;
+  background:#185a9d;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
 }
 </style>
 </head>
-<body>
 
+<body>
 <div class="container">
-<h1>แบบทดสอบ Arduino บทที่ 3</h1>
-<div class="score-box">
-คะแนนสะสม: <span id="score">0</span> / <span id="total">0</span>
-</div>
-<form id="quiz"></form>
+  <h1>ข้อสอบ Arduino บทที่ 4</h1>
+  <div class="score" id="score">คะแนน: 0</div>
+  <div class="question" id="question"></div>
+  <div id="choices"></div>
+  <button onclick="next()">ข้อถัดไป</button>
 </div>
 
 <script>
-const quizData = [
-{q:"Arduino คืออะไร",a:["ภาษาโปรแกรม","ไมโครคอนโทรลเลอร์","แพลตฟอร์มต้นแบบแบบโอเพนซอร์ส","ซอฟต์แวร์จำลองวงจร"],c:2},
-{q:"ซอฟต์แวร์ที่ใช้เขียนโปรแกรม Arduino คืออะไร",a:["Arduino Studio","Arduino IDE","Arduino Code","Arduino Compiler"],c:1},
-{q:"Arduino Uno ใช้ MCU รุ่นใด",a:["ATmega16","ATmega328","ATmega2560","ATtiny85"],c:1},
-{q:"Arduino Uno มีขา Digital I/O กี่ขา",a:["6","8","12","14"],c:3},
-{q:"ขา PWM ของ Arduino Uno มีกี่ขา",a:["4","5","6","8"],c:2},
-{q:"ฟังก์ชันใดทำงานครั้งเดียวตอนเริ่มต้น",a:["loop()","main()","setup()","start()"],c:2},
-{q:"ฟังก์ชัน loop() มีหน้าที่ใด",a:["เริ่มต้นระบบ","ทำงานวนซ้ำ","ประกาศตัวแปร","อัปโหลดโปรแกรม"],c:1},
-{q:"ชนิดข้อมูลใดเก็บค่า true/false",a:["int","char","boolean","float"],c:2},
-{q:"ตัวแปรที่ประกาศนอกฟังก์ชันเรียกว่าอะไร",a:["local","static","global","const"],c:2},
-{q:"คำสั่งใดใช้เลือกหลายกรณี",a:["if","for","while","switch-case"],c:3},
-// (ครบ 30 ข้อ ใช้ชุดเดียวกับก่อนหน้า)
+// ================== คลังข้อสอบ (30 ข้อ) ==================
+const questions = [
+{q:"พอร์ต I/O บน Arduino เรียกว่าอะไร",c:["PORT","BUS","PIN","CHANNEL"],a:2},
+{q:"Arduino Uno มี Digital Pin กี่ขา",c:["10","12","14","16"],a:2},
+{q:"Digital Pin มีสถานะกี่แบบ",c:["1","2","3","4"],a:1},
+{q:"ค่า HIGH ของ Arduino Uno ประมาณเท่าใด",c:["1.8V","3.3V","5V","12V"],a:2},
+{q:"ฟังก์ชันใดใช้กำหนดโหมดขา",c:["digitalWrite","pinMode","analogRead","delay"],a:1},
+{q:"โหมด INPUT_PULLUP มีคุณสมบัติอย่างไร",c:["ต้องใช้ R ภายนอก","มี pull-up ภายใน","มี pull-down ภายใน","ใช้เฉพาะ Analog"],a:1},
+{q:"เมื่อกดสวิตช์ใน INPUT_PULLUP ค่าเป็นอะไร",c:["HIGH","LOW","FLOAT","ERROR"],a:1},
+{q:"กระแสสูงสุดที่ขา I/O ไม่ควรเกิน",c:["10mA","20mA","30mA","40mA"],a:3},
+{q:"digitalWrite() ใช้ทำอะไร",c:["อ่านค่า","เขียน HIGH/LOW","เขียน PWM","อ่าน Analog"],a:1},
+{q:"digitalRead() ใช้ทำอะไร",c:["อ่านค่า Digital","อ่าน Analog","เขียนค่า","ตั้งโหมด"],a:0},
+
+{q:"Arduino Uno มี Analog Input กี่ขา",c:["4","6","8","10"],a:1},
+{q:"analogRead() ให้ค่าช่วงใด",c:["0–255","0–512","0–1023","0–4095"],a:2},
+{q:"แรงดันอ้างอิงของ Arduino Uno คือ",c:["3.3V","5V","1.1V","12V"],a:1},
+{q:"แรงดัน 2.5V จะได้ค่า analogRead ใกล้เคียง",c:["256","384","512","768"],a:2},
+{q:"ADC ของ Arduino Uno มีความละเอียดกี่บิต",c:["8","10","12","16"],a:1},
+
+{q:"PWM ย่อมาจากอะไร",c:["Pulse Wave Mode","Power Width Modulation","Pulse Width Modulation","Programmable Wave Module"],a:2},
+{q:"ขา PWM บน Arduino Uno คือข้อใด",c:["0–5","3,5,6,9,10,11","A0–A5","2,4,7,8"],a:1},
+{q:"analogWrite() ใช้กับขาแบบใด",c:["Digital","Analog","PWM","Serial"],a:2},
+{q:"ค่า analogWrite อยู่ในช่วงใด",c:["0–100","0–255","0–1023","0–5"],a:1},
+{q:"Duty Cycle คืออะไร",c:["แรงดัน","ความถี่","เวลาที่เป็น HIGH","กระแส"],a:2},
+
+{q:"การสื่อสารแบบ Serial ส่งข้อมูลอย่างไร",c:["หลายบิตพร้อมกัน","ทีละบิต","ใช้หลายสาย","ต้องมี Clock"],a:1},
+{q:"Serial.begin(9600) หมายถึงอะไร",c:["แรงดัน","ความถี่","Baud rate","Delay"],a:2},
+{q:"Serial.print() ใช้ทำอะไร",c:["รับข้อมูล","ส่งข้อมูล","ตั้งค่า","แปลงข้อมูล"],a:1},
+{q:"Serial Monitor ใช้เพื่ออะไร",c:["เขียนโค้ด","แสดงผลข้อมูล","อัปโหลดโปรแกรม","Debug ฮาร์ดแวร์"],a:1},
+
+{q:"UART ใช้สายสัญญาณกี่เส้นหลัก",c:["1","2","3","4"],a:1},
+{q:"TX หมายถึงอะไร",c:["รับข้อมูล","ส่งข้อมูล","Clock","เลือก Slave"],a:1},
+{q:"RX หมายถึงอะไร",c:["ส่งข้อมูล","รับข้อมูล","Clock","Address"],a:1},
+{q:"I2C ใช้สายกี่เส้น",c:["1","2","3","4"],a:1},
+{q:"สายของ I2C คือข้อใด",c:["TX/RX","MOSI/MISO","SDA/SCL","CS/CLK"],a:2},
+{q:"SPI ใช้สายหลักกี่เส้น",c:["2","3","4","5"],a:2}
 ];
 
-let score = Number(localStorage.getItem("arduinoScore")) || 0;
-let answered = JSON.parse(localStorage.getItem("arduinoAnswered")) || {};
+// ================== ระบบ Quiz ==================
+let quiz=[...questions].sort(()=>Math.random()-0.5);
+let index=0,score=0,answered=false;
 
-document.getElementById("score").textContent = score;
-document.getElementById("total").textContent = quizData.length;
+function loadQ(){
+ answered=false;
+ document.getElementById("question").innerText=`ข้อ ${index+1}: ${quiz[index].q}`;
+ const c=document.getElementById("choices");
+ c.innerHTML="";
+ quiz[index].c.forEach((x,i)=>{
+  let d=document.createElement("div");
+  d.className="choice";
+  d.innerText=x;
+  d.onclick=()=>check(d,i);
+  c.appendChild(d);
+ });
+}
+loadQ();
 
-const quizForm = document.getElementById("quiz");
+function check(el,i){
+ if(answered)return;
+ answered=true;
+ const q=quiz[index];
+ document.querySelectorAll(".choice").forEach((c,idx)=>{
+  c.classList.add("disabled");
+  if(idx===q.a)c.classList.add("correct");
+  if(idx===i && i!==q.a)c.classList.add("wrong");
+ });
+ if(i===q.a){
+  score++;
+  document.getElementById("score").innerText=`คะแนน: ${score}`;
+ }
+}
 
-quizData.forEach((item,i)=>{
-  const div = document.createElement("div");
-  div.className="question";
-  div.innerHTML = `<p><b>ข้อ ${i+1}.</b> ${item.q}</p>`;
-  item.a.forEach((ans,j)=>{
-    const label=document.createElement("label");
-    label.innerHTML = `
-      <input type="radio" name="q${i}" value="${j}">
-      ${ans}
-    `;
-    label.onclick = ()=>checkAnswer(i,j,label);
-    div.appendChild(label);
-  });
-  quizForm.appendChild(div);
-});
-
-function checkAnswer(qIndex, ansIndex, label){
-  if(answered[qIndex]) return;
-
-  const correct = quizData[qIndex].c;
-  const labels = document.getElementsByName(`q${qIndex}`);
-
-  labels.forEach(l=>{
-    l.disabled=true;
-    if(Number(l.value)===correct){
-      l.parentElement.classList.add("correct");
-      l.parentElement.innerHTML += " ✓ (ถูก)";
-    }
-  });
-
-  if(ansIndex===correct){
-    score++;
-    document.getElementById("score").textContent = score;
-  }else{
-    label.classList.add("wrong");
-    label.innerHTML += " ✗ (ผิด)";
-  }
-
-  answered[qIndex]=true;
-  localStorage.setItem("arduinoScore",score);
-  localStorage.setItem("arduinoAnswered",JSON.stringify(answered));
+function next(){
+ if(!answered){alert("กรุณาเลือกคำตอบก่อน");return;}
+ index++;
+ if(index<quiz.length) loadQ();
+ else document.body.innerHTML=
+ `<div class="container">
+   <h1>จบแบบทดสอบ</h1>
+   <h2>คะแนนที่ได้ ${score}/${quiz.length}</h2>
+  </div>`;
 }
 </script>
-
 </body>
 </html>
