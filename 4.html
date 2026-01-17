@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>แบบทดสอบ วงจรไฟฟ้า บทที่ 2</title>
+
+<style>
+body{
+  font-family:"Segoe UI",sans-serif;
+  background:linear-gradient(135deg,#43cea2,#185a9d);
+  padding:30px;
+}
+.container{
+  max-width:800px;
+  margin:auto;
+  background:#fff;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 15px 35px rgba(0,0,0,.25);
+}
+h1{text-align:center}
+.score{text-align:right;font-weight:bold}
+.question{font-size:20px;margin:20px 0}
+.choice{
+  border:2px solid #ddd;
+  border-radius:12px;
+  padding:12px;
+  margin:10px 0;
+  cursor:pointer;
+  transition:.3s;
+}
+.choice:hover{background:#f3f3f3}
+.correct{background:#d4edda;border-color:#28a745}
+.wrong{background:#f8d7da;border-color:#dc3545}
+.disabled{pointer-events:none}
+button{
+  width:100%;
+  padding:12px;
+  font-size:18px;
+  background:#185a9d;
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1>ข้อสอบ วงจรไฟฟ้า บทที่ 2</h1>
+  <div class="score" id="score">คะแนน: 0</div>
+  <div class="question" id="question"></div>
+  <div id="choices"></div>
+  <button onclick="next()">ข้อถัดไป</button>
+</div>
+
+<script>
+const quizData = [
+{q:"กระแสไฟฟ้าคืออะไร",a:["พลังงานไฟฟ้า","การเคลื่อนที่ของอิเล็กตรอน","แรงดันไฟฟ้า","ความต้านทาน"],c:1},
+{q:"หน่วยของกระแสไฟฟ้าคืออะไร",a:["โวลต์","โอห์ม","แอมแปร์","วัตต์"],c:2},
+{q:"แรงดันไฟฟ้าหมายถึงอะไร",a:["ปริมาณประจุ","พลังงานต่อประจุ","ความเร็วอิเล็กตรอน","ความต้านทาน"],c:1},
+{q:"หน่วยของแรงดันไฟฟ้า",a:["A","V","Ω","W"],c:1},
+{q:"ความต้านทานไฟฟ้าคืออะไร",a:["การไหลของกระแส","การขัดขวางกระแส","พลังงานไฟฟ้า","แรงดัน"],c:1},
+
+{q:"หน่วยของความต้านทานคืออะไร",a:["โวลต์","แอมแปร์","โอห์ม","วัตต์"],c:2},
+{q:"กฎของโอห์มคือสมการใด",a:["V=IR","P=VI","I=PR","V=I/R"],c:0},
+{q:"ถ้า V เพิ่ม กระแสจะเป็นอย่างไร (R คงที่)",a:["ลดลง","คงที่","เพิ่มขึ้น","เป็นศูนย์"],c:2},
+{q:"วงจรไฟฟ้าจะทำงานได้ต้องมีอะไร",a:["สวิตช์","แหล่งจ่าย","โหลด","ครบทุกข้อ"],c:3},
+{q:"วงจรเปิดมีลักษณะอย่างไร",a:["กระแสไหล","กระแสไม่ไหล","แรงดันเป็นศูนย์","โหลดเสีย"],c:1},
+
+{q:"วงจรปิดคืออะไร",a:["สวิตช์เปิด","สวิตช์ปิด","ไม่มีโหลด","ไม่มีแหล่งจ่าย"],c:1},
+{q:"โหลดในวงจรคืออะไร",a:["แหล่งจ่าย","สายไฟ","อุปกรณ์ใช้ไฟ","สวิตช์"],c:2},
+{q:"อุปกรณ์ใดเป็นแหล่งจ่ายไฟฟ้า",a:["ตัวต้านทาน","หลอดไฟ","แบตเตอรี่","สวิตช์"],c:2},
+{q:"ตัวต้านทานทำหน้าที่ใด",a:["เพิ่มแรงดัน","ลดกระแส","เพิ่มพลังงาน","เก็บประจุ"],c:1},
+{q:"หน่วยกำลังไฟฟ้าคืออะไร",a:["V","A","Ω","W"],c:3},
+
+{q:"สูตรกำลังไฟฟ้าที่ถูกต้องคือข้อใด",a:["P=IR","P=VI","P=V/R","P=I/R"],c:1},
+{q:"วงจรอนุกรมมีลักษณะอย่างไร",a:["กระแสเท่ากัน","แรงดันเท่ากัน","ต้านทานเท่ากัน","แรงดันเป็นศูนย์"],c:0},
+{q:"วงจรขนานมีลักษณะอย่างไร",a:["กระแสเท่ากัน","แรงดันเท่ากัน","กำลังเท่ากัน","ต้านทานรวมมาก"],c:1},
+{q:"ถ้าหลอดไฟในวงจรอนุกรมขาด จะเกิดอะไร",a:["สว่างขึ้น","ดวงอื่นยังติด","ดับทั้งหมด","แรงดันเพิ่ม"],c:2},
+{q:"ถ้าหลอดไฟในวงจรขนานขาด 1 ดวง",a:["ดับหมด","ดวงอื่นยังติด","แรงดันหาย","กระแสเป็นศูนย์"],c:1},
+
+{q:"ความต้านทานรวมในวงจรอนุกรมเป็นอย่างไร",a:["น้อยลง","มากขึ้น","คงที่","เป็นศูนย์"],c:1},
+{q:"ความต้านทานรวมในวงจรขนานเป็นอย่างไร",a:["มากกว่าตัวเดียว","น้อยกว่าตัวเดียว","เท่ากัน","เป็นอนันต์"],c:1},
+{q:"สัญลักษณ์ R ใช้แทนอะไร",a:["แรงดัน","กระแส","ความต้านทาน","กำลัง"],c:2},
+{q:"เครื่องมือใดใช้วัดแรงดันไฟฟ้า",a:["แอมมิเตอร์","โวลต์มิเตอร์","โอห์มมิเตอร์","วัตต์มิเตอร์"],c:1},
+
+{q:"แอมมิเตอร์ต้องต่อแบบใด",a:["ขนาน","อนุกรม","คร่อมโหลด","คร่อมแหล่งจ่าย"],c:1},
+{q:"โวลต์มิเตอร์ต้องต่อแบบใด",a:["อนุกรม","ขนาน","ตัดวงจร","แทนโหลด"],c:1},
+{q:"กระแสไฟฟ้าไหลจากขั้วใดไปขั้วใด (ทฤษฎี)",a:["ลบ → บวก","บวก → ลบ","สุ่มทิศ","ไม่ไหล"],c:1},
+{q:"ไฟฟ้ากระแสตรง (DC) มีลักษณะอย่างไร",a:["กลับทิศ","ทิศเดียว","ความถี่สูง","เป็นคลื่น"],c:1},
+{q:"แหล่งจ่ายไฟฟ้ากระแสตรงคือข้อใด",a:["ปลั๊กบ้าน","เครื่องกำเนิด","แบตเตอรี่","หม้อแปลง"],c:2}
+];
+
+let quiz=[...quizData];
+let index=0,score=0,answered=false;
+
+function loadQ(){
+ answered=false;
+ document.getElementById("question").innerText=
+  `ข้อ ${index+1} / ${quiz.length}: ${quiz[index].q}`;
+ const c=document.getElementById("choices");
+ c.innerHTML="";
+ quiz[index].a.forEach((x,i)=>{
+  let d=document.createElement("div");
+  d.className="choice";
+  d.innerText=x;
+  d.onclick=()=>check(d,i);
+  c.appendChild(d);
+ });
+}
+loadQ();
+
+function check(el,i){
+ if(answered)return;
+ answered=true;
+ const q=quiz[index];
+ document.querySelectorAll(".choice").forEach((c,idx)=>{
+  c.classList.add("disabled");
+  if(idx===q.c)c.classList.add("correct");
+  if(idx===i && i!==q.c)c.classList.add("wrong");
+ });
+ if(i===q.c){
+  score++;
+  document.getElementById("score").innerText=`คะแนน: ${score}`;
+ }
+}
+
+function next(){
+ if(!answered){alert("กรุณาเลือกคำตอบก่อน");return;}
+ index++;
+ if(index<quiz.length) loadQ();
+ else document.body.innerHTML=
+ `<div class="container">
+   <h1>จบแบบทดสอบ</h1>
+   <h2>คะแนนที่ได้ ${score}/${quiz.length}</h2>
+  </div>`;
+}
+</script>
+</body>
+</html>
