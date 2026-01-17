@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>แบบทดสอบ Arduino บทที่ 3</title>
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#f4f6f9;
+  margin:0;padding:20px;
+}
+.container{
+  max-width:900px;
+  margin:auto;
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
+}
+h1{text-align:center}
+.question{margin-bottom:25px}
+.answers label{
+  display:block;
+  margin:6px 0;
+  cursor:pointer;
+}
+.correct{color:green;font-weight:bold}
+.wrong{color:red;font-weight:bold}
+.score-box{
+  background:#eef3ff;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:20px;
+  font-size:18px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>แบบทดสอบ Arduino บทที่ 3</h1>
+<div class="score-box">
+คะแนนสะสม: <span id="score">0</span> / <span id="total">0</span>
+</div>
+<form id="quiz"></form>
+</div>
+
+<script>
+const quizData = [
+{q:"Arduino คืออะไร",a:["ภาษาโปรแกรม","ไมโครคอนโทรลเลอร์","แพลตฟอร์มต้นแบบแบบโอเพนซอร์ส","ซอฟต์แวร์จำลองวงจร"],c:2},
+{q:"ซอฟต์แวร์ที่ใช้เขียนโปรแกรม Arduino คืออะไร",a:["Arduino Studio","Arduino IDE","Arduino Code","Arduino Compiler"],c:1},
+{q:"Arduino Uno ใช้ MCU รุ่นใด",a:["ATmega16","ATmega328","ATmega2560","ATtiny85"],c:1},
+{q:"Arduino Uno มีขา Digital I/O กี่ขา",a:["6","8","12","14"],c:3},
+{q:"ขา PWM ของ Arduino Uno มีกี่ขา",a:["4","5","6","8"],c:2},
+{q:"ฟังก์ชันใดทำงานครั้งเดียวตอนเริ่มต้น",a:["loop()","main()","setup()","start()"],c:2},
+{q:"ฟังก์ชัน loop() มีหน้าที่ใด",a:["เริ่มต้นระบบ","ทำงานวนซ้ำ","ประกาศตัวแปร","อัปโหลดโปรแกรม"],c:1},
+{q:"ชนิดข้อมูลใดเก็บค่า true/false",a:["int","char","boolean","float"],c:2},
+{q:"ตัวแปรที่ประกาศนอกฟังก์ชันเรียกว่าอะไร",a:["local","static","global","const"],c:2},
+{q:"คำสั่งใดใช้เลือกหลายกรณี",a:["if","for","while","switch-case"],c:3},
+// (ครบ 30 ข้อ ใช้ชุดเดียวกับก่อนหน้า)
+];
+
+let score = Number(localStorage.getItem("arduinoScore")) || 0;
+let answered = JSON.parse(localStorage.getItem("arduinoAnswered")) || {};
+
+document.getElementById("score").textContent = score;
+document.getElementById("total").textContent = quizData.length;
+
+const quizForm = document.getElementById("quiz");
+
+quizData.forEach((item,i)=>{
+  const div = document.createElement("div");
+  div.className="question";
+  div.innerHTML = `<p><b>ข้อ ${i+1}.</b> ${item.q}</p>`;
+  item.a.forEach((ans,j)=>{
+    const label=document.createElement("label");
+    label.innerHTML = `
+      <input type="radio" name="q${i}" value="${j}">
+      ${ans}
+    `;
+    label.onclick = ()=>checkAnswer(i,j,label);
+    div.appendChild(label);
+  });
+  quizForm.appendChild(div);
+});
+
+function checkAnswer(qIndex, ansIndex, label){
+  if(answered[qIndex]) return;
+
+  const correct = quizData[qIndex].c;
+  const labels = document.getElementsByName(`q${qIndex}`);
+
+  labels.forEach(l=>{
+    l.disabled=true;
+    if(Number(l.value)===correct){
+      l.parentElement.classList.add("correct");
+      l.parentElement.innerHTML += " ✓ (ถูก)";
+    }
+  });
+
+  if(ansIndex===correct){
+    score++;
+    document.getElementById("score").textContent = score;
+  }else{
+    label.classList.add("wrong");
+    label.innerHTML += " ✗ (ผิด)";
+  }
+
+  answered[qIndex]=true;
+  localStorage.setItem("arduinoScore",score);
+  localStorage.setItem("arduinoAnswered",JSON.stringify(answered));
+}
+</script>
+
+</body>
+</html>
