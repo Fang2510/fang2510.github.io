@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Arduino Quiz บทที่ 4</title>
+<title>Arduino Quiz บทที่ 3</title>
 
 <style>
 body{
@@ -48,18 +48,11 @@ button{
 
 <body>
 <div class="container">
-  <h1>ข้อสอบ Arduino บทที่ 4</h1>
+  <h1>ข้อสอบ Arduino บทที่ 3</h1>
   <div class="score" id="score">คะแนน: 0</div>
   <div class="question" id="question"></div>
   <div id="choices"></div>
   <button onclick="next()">ข้อถัดไป</button>
-</div>
-
-<div class="container">
-<h1>แบบทดสอบ Arduino บทที่ 3 (30 ข้อ)</h1>
-<form id="quiz"></form>
-<button type="button" onclick="checkAnswers()">ตรวจคำตอบ</button>
-<div id="result"></div>
 </div>
 
 <script>
@@ -96,16 +89,16 @@ const quizData = [
 {q:"Arduino เป็น Open-source ด้านใด",a:["Hardware","Software","ทั้งสอง","ไม่ใช่"],c:2},
 ];
 
-// ================== ระบบ Quiz ==================
-let quiz=[...questions].sort(()=>Math.random()-0.5);
+let quiz=[...quizData];
 let index=0,score=0,answered=false;
 
 function loadQ(){
  answered=false;
- document.getElementById("question").innerText=`ข้อ ${index+1}: ${quiz[index].q}`;
+ document.getElementById("question").innerText=
+  `ข้อ ${index+1} / ${quiz.length}: ${quiz[index].q}`;
  const c=document.getElementById("choices");
  c.innerHTML="";
- quiz[index].c.forEach((x,i)=>{
+ quiz[index].a.forEach((x,i)=>{
   let d=document.createElement("div");
   d.className="choice";
   d.innerText=x;
@@ -121,10 +114,10 @@ function check(el,i){
  const q=quiz[index];
  document.querySelectorAll(".choice").forEach((c,idx)=>{
   c.classList.add("disabled");
-  if(idx===q.a)c.classList.add("correct");
-  if(idx===i && i!==q.a)c.classList.add("wrong");
+  if(idx===q.c)c.classList.add("correct");
+  if(idx===i && i!==q.c)c.classList.add("wrong");
  });
- if(i===q.a){
+ if(i===q.c){
   score++;
   document.getElementById("score").innerText=`คะแนน: ${score}`;
  }
